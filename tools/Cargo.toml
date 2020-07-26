@@ -1,0 +1,13 @@
+[package]
+name = "bessagent"
+version = "0.0.0"
+authors = ["Melvin Walls <mwalls67@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+libbess         = { path = "../libbess" }
+tonic = "0.3.0"
+prost = "0.6.1"
+prost-types = "0.6.1"
+tokio = {version="0.2.22",features = ["stream", "macros"]}
+futures = "0.3"
