@@ -2,13 +2,9 @@ extern crate futures;
 extern crate libbess;
 extern crate serde;
 extern crate serde_json;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
 
 use futures::executor;
 use grpc::ClientStubExt;
-use protobuf::well_known_types::Any;
 use protobuf::Message;
 
 use libbess::service_grpc::BESSControlClient;
