@@ -24,7 +24,7 @@
 // const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_16_2;
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\rservice.proto\x12\x07bess.pb\x1a\x0ebess_msg.proto2\xd4\x1b\n\x0bBES\
+    \n\rservice.proto\x12\x07bess.pb\x1a\x0ebess_msg.proto2\xa2\x1c\n\x0bBES\
     SControl\x12?\n\nGetVersion\x12\x15.bess.pb.EmptyRequest\x1a\x18.bess.pb\
     .VersionResponse\"\0\x12;\n\x08ResetAll\x12\x15.bess.pb.EmptyRequest\x1a\
     \x16.bess.pb.EmptyResponse\"\0\x12;\n\x08KillBess\x12\x15.bess.pb.EmptyR\
@@ -87,17 +87,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     equest\x1a\x1e.bess.pb.ListGateHooksResponse\"\0\x12N\n\x0fGateHookComma\
     nd\x12\x1f.bess.pb.GateHookCommandRequest\x1a\x18.bess.pb.CommandRespons\
     e\"\0\x12V\n\x13ConfigureResumeHook\x12#.bess.pb.ConfigureResumeHookRequ\
-    est\x1a\x18.bess.pb.CommandResponse\"\0b\x06proto3\
+    est\x1a\x18.bess.pb.CommandResponse\"\0\x12L\n\x0fDumpDescriptors\x12\
+    \x15.bess.pb.EmptyRequest\x1a\x20.bess.pb.DumpDescriptorsResponse\"\0b\
+    \x06proto3\
 ";
 
-static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
+static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<
+    ::protobuf::descriptor::FileDescriptorProto,
+> = ::protobuf::rt::LazyV2::INIT;
 
 fn parse_descriptor_proto() -> ::protobuf::descriptor::FileDescriptorProto {
     ::protobuf::parse_from_bytes(file_descriptor_proto_data).unwrap()
 }
 
 pub fn file_descriptor_proto() -> &'static ::protobuf::descriptor::FileDescriptorProto {
-    file_descriptor_proto_lazy.get(|| {
-        parse_descriptor_proto()
-    })
+    file_descriptor_proto_lazy.get(|| parse_descriptor_proto())
 }
