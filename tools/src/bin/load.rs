@@ -22,7 +22,7 @@ fn main() {
     let mut f = fs::File::open("tools/blah2.json").unwrap();
     let mut jstr = String::new();
     f.read_to_string(&mut jstr).unwrap();
-    let msg = json_pb::from_str(&descriptors, &jstr).unwrap();
+    let (_, msg) = json_pb::from_str(&descriptors, &jstr).unwrap();
 
     let mut p = libbess::port_msg::VPortArg::new();
     p.set_ifname("eth_bob".to_string());
@@ -45,7 +45,7 @@ fn main() {
     let mut f2 = fs::File::open("tools/blah3.json").unwrap();
     let mut jstr2 = String::new();
     f2.read_to_string(&mut jstr2).unwrap();
-    let req = json_pb::from_str(&descriptors, &jstr2).unwrap();
+    let (_, req) = json_pb::from_str(&descriptors, &jstr2).unwrap();
     let rv = req.write_to_bytes().unwrap();
 
     let mut cargs = libbess::bess_msg::CreatePortRequest::new();

@@ -145,10 +145,16 @@ fn msg_from_json(
     Ok(ret)
 }
 
-pub fn from_str(descriptors: &Descriptors, jstr: &String) -> Result<Message, ()> {
+pub fn from_str(descriptors: &Descriptors, jstr: &String) -> Result<(String, Message), ()> {
     let m: serde_json::Value = serde_json::from_str(&jstr).unwrap();
     match m.as_object() {
-        Some(obj) => msg_from_json(None, descriptors, obj),
+        Some(obj) => {
+            let t = obj.get("@type").unwrap().as_str().unwrap();
+            Ok((
+                format!("type.googleapis.com/{}", t.strip_prefix(".").unwrap_or(&t)),
+                msg_from_json(None, descriptors, obj).unwrap(),
+            ))
+        }
         _ => Err(()),
     }
 }
