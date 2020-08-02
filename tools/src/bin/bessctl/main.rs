@@ -6,18 +6,15 @@ extern crate libbess;
 extern crate serde;
 extern crate serde_json;
 
+mod ports;
+
 use std::fs;
-use std::io::prelude::*;
 
 use clap::Clap;
-use futures::executor;
 use grpc::ClientStubExt;
-use protobuf::Message;
 use serde_protobuf::descriptor::Descriptors;
 
-use bessagent::{json_pb, pb};
 use libbess::service_grpc::BESSControlClient;
-use libbess::{bess_msg, port_msg};
 
 #[derive(Clap)]
 #[clap(version = "0.0.1", author = "Melvin Walls <mwalls67@gmail.com>")]
@@ -36,32 +33,9 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCommand {
-    ListPorts(ListPorts),
-    CreatePort(CreatePort),
-}
-
-/// List the currently configured ports
-#[derive(Clap)]
-struct ListPorts {
-    /// Glob filter to select ports with
-    #[clap(name = "FILTER")]
-    filter: Option<String>,
-}
-
-/// Create a new port
-#[derive(Clap)]
-struct CreatePort {
-    /// The driver the port should use
-    #[clap(name = "DRIVER")]
-    driver: String,
-
-    /// Name to give the new port
-    #[clap(name = "NAME")]
-    name: String,
-
-    /// Path to driver-specific configuration. Must be in canonical protobuf JSON format
-    #[clap(name = "CONFIG", parse(from_os_str))]
-    config: std::path::PathBuf,
+    ListPorts(ports::ListPorts),
+    CreatePort(ports::CreatePort),
+    DestroyPort(ports::DestroyPort),
 }
 
 fn main() {
@@ -86,28 +60,8 @@ fn main() {
             .unwrap();
 
     match opts.subcmd {
-        SubCommand::ListPorts(_) => {
-            let resp = client
-                .list_ports(grpc::RequestOptions::new(), bess_msg::EmptyRequest::new())
-                .drop_metadata();
-            let resp = &executor::block_on(resp).unwrap();
-            println!("{}", serde_json::to_string(resp).unwrap());
-        }
-        SubCommand::CreatePort(args) => {
-            let mut f = fs::File::open(args.config).unwrap();
-            let mut jstr = String::new();
-            f.read_to_string(&mut jstr).unwrap();
-            let (arg_type, conf) = json_pb::from_str(&descriptors, &jstr).unwrap();
-
-            let mut req = libbess::bess_msg::CreatePortRequest::new();
-            req.set_driver(args.driver);
-            req.set_name(args.name);
-            req.set_arg(pb::make_any(&arg_type, &conf).unwrap());
-            let resp = client
-                .create_port(grpc::RequestOptions::new(), req)
-                .drop_metadata();
-            let resp = &executor::block_on(resp).unwrap();
-            println!("{}", serde_json::to_string(resp).unwrap());
-        }
+        SubCommand::ListPorts(args) => ports::list_ports(&client, args),
+        SubCommand::CreatePort(args) => ports::create_port(&client, &descriptors, args),
+        SubCommand::DestroyPort(args) => ports::destroy_port(&client, args),
     }
 }
