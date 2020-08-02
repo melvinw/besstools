@@ -6,6 +6,7 @@ extern crate libbess;
 extern crate serde;
 extern crate serde_json;
 
+mod modules;
 mod ports;
 
 use std::fs;
@@ -36,6 +37,9 @@ enum SubCommand {
     ListPorts(ports::ListPorts),
     CreatePort(ports::CreatePort),
     DestroyPort(ports::DestroyPort),
+    ListModules(modules::ListModules),
+    CreateModule(modules::CreateModule),
+    DestroyModule(modules::DestroyModule),
 }
 
 fn main() {
@@ -63,5 +67,8 @@ fn main() {
         SubCommand::ListPorts(args) => ports::list_ports(&client, args),
         SubCommand::CreatePort(args) => ports::create_port(&client, &descriptors, args),
         SubCommand::DestroyPort(args) => ports::destroy_port(&client, args),
+        SubCommand::ListModules(args) => modules::list_modules(&client, args),
+        SubCommand::CreateModule(args) => modules::create_module(&client, &descriptors, args),
+        SubCommand::DestroyModule(args) => modules::destroy_module(&client, args),
     }
 }
