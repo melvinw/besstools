@@ -1,7 +1,8 @@
 extern crate grpc;
 extern crate grpc_protobuf;
 extern crate protobuf;
-#[macro_use] extern crate serde;
+#[macro_use]
+extern crate serde;
 extern crate serde_json;
 
 pub mod bess_msg;

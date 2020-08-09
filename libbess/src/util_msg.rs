@@ -23,7 +23,7 @@
 /// of protobuf runtime.
 // const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_16_2;
 
-#[derive(PartialEq,Clone,Default)]
+#[derive(PartialEq, Clone, Default)]
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub struct Field {
     // message fields
@@ -43,7 +43,7 @@ impl<'a> ::std::default::Default for &'a Field {
     }
 }
 
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub enum Field_oneof_position {
     attr_name(::std::string::String),
@@ -56,7 +56,6 @@ impl Field {
     }
 
     // string attr_name = 1;
-
 
     pub fn get_attr_name(&self) -> &str {
         match self.position {
@@ -84,7 +83,9 @@ impl Field {
     pub fn mut_attr_name(&mut self) -> &mut ::std::string::String {
         if let ::std::option::Option::Some(Field_oneof_position::attr_name(_)) = self.position {
         } else {
-            self.position = ::std::option::Option::Some(Field_oneof_position::attr_name(::std::string::String::new()));
+            self.position = ::std::option::Option::Some(Field_oneof_position::attr_name(
+                ::std::string::String::new(),
+            ));
         }
         match self.position {
             ::std::option::Option::Some(Field_oneof_position::attr_name(ref mut v)) => v,
@@ -105,7 +106,6 @@ impl Field {
     }
 
     // uint32 offset = 2;
-
 
     pub fn get_offset(&self) -> u32 {
         match self.position {
@@ -131,7 +131,6 @@ impl Field {
 
     // uint32 num_bytes = 3;
 
-
     pub fn get_num_bytes(&self) -> u32 {
         self.num_bytes
     }
@@ -150,32 +149,50 @@ impl ::protobuf::Message for Field {
         true
     }
 
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+    fn merge_from(
+        &mut self,
+        is: &mut ::protobuf::CodedInputStream<'_>,
+    ) -> ::protobuf::ProtobufResult<()> {
         while !is.eof()? {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(
+                            wire_type,
+                        ));
                     }
-                    self.position = ::std::option::Option::Some(Field_oneof_position::attr_name(is.read_string()?));
-                },
+                    self.position = ::std::option::Option::Some(Field_oneof_position::attr_name(
+                        is.read_string()?,
+                    ));
+                }
                 2 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(
+                            wire_type,
+                        ));
                     }
-                    self.position = ::std::option::Option::Some(Field_oneof_position::offset(is.read_uint32()?));
-                },
+                    self.position = ::std::option::Option::Some(Field_oneof_position::offset(
+                        is.read_uint32()?,
+                    ));
+                }
                 3 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(
+                            wire_type,
+                        ));
                     }
                     let tmp = is.read_uint32()?;
                     self.num_bytes = tmp;
-                },
+                }
                 _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
+                    ::protobuf::rt::read_unknown_or_skip_group(
+                        field_number,
+                        wire_type,
+                        is,
+                        self.mut_unknown_fields(),
+                    )?;
+                }
             };
         }
         ::std::result::Result::Ok(())
@@ -186,16 +203,21 @@ impl ::protobuf::Message for Field {
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
         if self.num_bytes != 0 {
-            my_size += ::protobuf::rt::value_size(3, self.num_bytes, ::protobuf::wire_format::WireTypeVarint);
+            my_size += ::protobuf::rt::value_size(
+                3,
+                self.num_bytes,
+                ::protobuf::wire_format::WireTypeVarint,
+            );
         }
         if let ::std::option::Option::Some(ref v) = self.position {
             match v {
                 &Field_oneof_position::attr_name(ref v) => {
                     my_size += ::protobuf::rt::string_size(1, &v);
-                },
+                }
                 &Field_oneof_position::offset(v) => {
-                    my_size += ::protobuf::rt::value_size(2, v, ::protobuf::wire_format::WireTypeVarint);
-                },
+                    my_size +=
+                        ::protobuf::rt::value_size(2, v, ::protobuf::wire_format::WireTypeVarint);
+                }
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -203,7 +225,10 @@ impl ::protobuf::Message for Field {
         my_size
     }
 
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+    fn write_to_with_cached_sizes(
+        &self,
+        os: &mut ::protobuf::CodedOutputStream<'_>,
+    ) -> ::protobuf::ProtobufResult<()> {
         if self.num_bytes != 0 {
             os.write_uint32(3, self.num_bytes)?;
         }
@@ -211,10 +236,10 @@ impl ::protobuf::Message for Field {
             match v {
                 &Field_oneof_position::attr_name(ref v) => {
                     os.write_string(1, v)?;
-                },
+                }
                 &Field_oneof_position::offset(v) => {
                     os.write_uint32(2, v)?;
-                },
+                }
             };
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
@@ -252,28 +277,36 @@ impl ::protobuf::Message for Field {
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> =
+            ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_singular_string_accessor::<_>(
-                "attr_name",
-                Field::has_attr_name,
-                Field::get_attr_name,
-            ));
-            fields.push(::protobuf::reflect::accessor::make_singular_u32_accessor::<_>(
-                "offset",
-                Field::has_offset,
-                Field::get_offset,
-            ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint32>(
+            fields.push(
+                ::protobuf::reflect::accessor::make_singular_string_accessor::<_>(
+                    "attr_name",
+                    Field::has_attr_name,
+                    Field::get_attr_name,
+                ),
+            );
+            fields.push(
+                ::protobuf::reflect::accessor::make_singular_u32_accessor::<_>(
+                    "offset",
+                    Field::has_offset,
+                    Field::get_offset,
+                ),
+            );
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<
+                _,
+                ::protobuf::types::ProtobufTypeUint32,
+            >(
                 "num_bytes",
-                |m: &Field| { &m.num_bytes },
-                |m: &mut Field| { &mut m.num_bytes },
+                |m: &Field| &m.num_bytes,
+                |m: &mut Field| &mut m.num_bytes,
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<Field>(
                 "Field",
                 fields,
-                file_descriptor_proto()
+                file_descriptor_proto(),
             )
         })
     }
@@ -305,7 +338,7 @@ impl ::protobuf::reflect::ProtobufValue for Field {
     }
 }
 
-#[derive(PartialEq,Clone,Default)]
+#[derive(PartialEq, Clone, Default)]
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub struct FieldData {
     // message oneof groups
@@ -323,7 +356,7 @@ impl<'a> ::std::default::Default for &'a FieldData {
     }
 }
 
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
 pub enum FieldData_oneof_encoding {
     value_bin(::std::vec::Vec<u8>),
@@ -336,7 +369,6 @@ impl FieldData {
     }
 
     // bytes value_bin = 1;
-
 
     pub fn get_value_bin(&self) -> &[u8] {
         match self.encoding {
@@ -364,7 +396,9 @@ impl FieldData {
     pub fn mut_value_bin(&mut self) -> &mut ::std::vec::Vec<u8> {
         if let ::std::option::Option::Some(FieldData_oneof_encoding::value_bin(_)) = self.encoding {
         } else {
-            self.encoding = ::std::option::Option::Some(FieldData_oneof_encoding::value_bin(::std::vec::Vec::new()));
+            self.encoding = ::std::option::Option::Some(FieldData_oneof_encoding::value_bin(
+                ::std::vec::Vec::new(),
+            ));
         }
         match self.encoding {
             ::std::option::Option::Some(FieldData_oneof_encoding::value_bin(ref mut v)) => v,
@@ -385,7 +419,6 @@ impl FieldData {
     }
 
     // uint64 value_int = 2;
-
 
     pub fn get_value_int(&self) -> u64 {
         match self.encoding {
@@ -415,25 +448,41 @@ impl ::protobuf::Message for FieldData {
         true
     }
 
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+    fn merge_from(
+        &mut self,
+        is: &mut ::protobuf::CodedInputStream<'_>,
+    ) -> ::protobuf::ProtobufResult<()> {
         while !is.eof()? {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
                     if wire_type != ::protobuf::wire_format::WireTypeLengthDelimited {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(
+                            wire_type,
+                        ));
                     }
-                    self.encoding = ::std::option::Option::Some(FieldData_oneof_encoding::value_bin(is.read_bytes()?));
-                },
+                    self.encoding = ::std::option::Option::Some(
+                        FieldData_oneof_encoding::value_bin(is.read_bytes()?),
+                    );
+                }
                 2 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(
+                            wire_type,
+                        ));
                     }
-                    self.encoding = ::std::option::Option::Some(FieldData_oneof_encoding::value_int(is.read_uint64()?));
-                },
+                    self.encoding = ::std::option::Option::Some(
+                        FieldData_oneof_encoding::value_int(is.read_uint64()?),
+                    );
+                }
                 _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
+                    ::protobuf::rt::read_unknown_or_skip_group(
+                        field_number,
+                        wire_type,
+                        is,
+                        self.mut_unknown_fields(),
+                    )?;
+                }
             };
         }
         ::std::result::Result::Ok(())
@@ -447,10 +496,11 @@ impl ::protobuf::Message for FieldData {
             match v {
                 &FieldData_oneof_encoding::value_bin(ref v) => {
                     my_size += ::protobuf::rt::bytes_size(1, &v);
-                },
+                }
                 &FieldData_oneof_encoding::value_int(v) => {
-                    my_size += ::protobuf::rt::value_size(2, v, ::protobuf::wire_format::WireTypeVarint);
-                },
+                    my_size +=
+                        ::protobuf::rt::value_size(2, v, ::protobuf::wire_format::WireTypeVarint);
+                }
             };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -458,15 +508,18 @@ impl ::protobuf::Message for FieldData {
         my_size
     }
 
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+    fn write_to_with_cached_sizes(
+        &self,
+        os: &mut ::protobuf::CodedOutputStream<'_>,
+    ) -> ::protobuf::ProtobufResult<()> {
         if let ::std::option::Option::Some(ref v) = self.encoding {
             match v {
                 &FieldData_oneof_encoding::value_bin(ref v) => {
                     os.write_bytes(1, v)?;
-                },
+                }
                 &FieldData_oneof_encoding::value_int(v) => {
                     os.write_uint64(2, v)?;
-                },
+                }
             };
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
@@ -504,23 +557,28 @@ impl ::protobuf::Message for FieldData {
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> =
+            ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_singular_bytes_accessor::<_>(
-                "value_bin",
-                FieldData::has_value_bin,
-                FieldData::get_value_bin,
-            ));
-            fields.push(::protobuf::reflect::accessor::make_singular_u64_accessor::<_>(
-                "value_int",
-                FieldData::has_value_int,
-                FieldData::get_value_int,
-            ));
+            fields.push(
+                ::protobuf::reflect::accessor::make_singular_bytes_accessor::<_>(
+                    "value_bin",
+                    FieldData::has_value_bin,
+                    FieldData::get_value_bin,
+                ),
+            );
+            fields.push(
+                ::protobuf::reflect::accessor::make_singular_u64_accessor::<_>(
+                    "value_int",
+                    FieldData::has_value_int,
+                    FieldData::get_value_int,
+                ),
+            );
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<FieldData>(
                 "FieldData",
                 fields,
-                file_descriptor_proto()
+                file_descriptor_proto(),
             )
         })
     }
@@ -560,14 +618,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ntB\n\n\x08encodingb\x06proto3\
 ";
 
-static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
+static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<
+    ::protobuf::descriptor::FileDescriptorProto,
+> = ::protobuf::rt::LazyV2::INIT;
 
 fn parse_descriptor_proto() -> ::protobuf::descriptor::FileDescriptorProto {
     ::protobuf::parse_from_bytes(file_descriptor_proto_data).unwrap()
 }
 
 pub fn file_descriptor_proto() -> &'static ::protobuf::descriptor::FileDescriptorProto {
-    file_descriptor_proto_lazy.get(|| {
-        parse_descriptor_proto()
-    })
+    file_descriptor_proto_lazy.get(|| parse_descriptor_proto())
 }
