@@ -36,6 +36,7 @@ enum SubCommand {
     ListModules(modules::ListModules),
     CreateModule(modules::CreateModule),
     DestroyModule(modules::DestroyModule),
+    RunModuleCommand(modules::RunModuleCommand),
 }
 
 fn main() {
@@ -60,5 +61,6 @@ fn main() {
         SubCommand::ListModules(args) => modules::list_modules(&client, args),
         SubCommand::CreateModule(args) => modules::create_module(&client, args),
         SubCommand::DestroyModule(args) => modules::destroy_module(&client, args),
+        SubCommand::RunModuleCommand(args) => modules::run_module_command(&client, args),
     }
 }

@@ -61,6 +61,22 @@ impl BessClient {
         }
     }
 
+    pub fn get_module_command_descriptor(
+        &self,
+        mclass: &str,
+        cmd: &str,
+    ) -> Option<&MessageDescriptor> {
+        match self.remote_descriptors.module_commands.get(mclass) {
+            Some(cmds) => match cmds.commands.get(cmd) {
+                Some(desc) => self
+                    .descriptors
+                    .message_by_name(&format!(".{}", desc.get_name())),
+                None => None,
+            },
+            None => None,
+        }
+    }
+
     pub fn get_port_init_descriptor(&self, driver: &str) -> Option<&MessageDescriptor> {
         match self.remote_descriptors.ports.get(driver) {
             Some(desc) => self
