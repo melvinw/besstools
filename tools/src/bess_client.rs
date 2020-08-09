@@ -33,15 +33,15 @@ impl BessClient {
             )
             .drop_metadata();
         let resp = executor::block_on(f_resp).unwrap();
-        for (_, desc) in &resp.modules {
+        for (_mclass, desc) in &resp.modules {
             descriptors.add_message_proto("", &desc);
         }
-        for (_, cmds) in &resp.module_commands {
-            for (_, desc) in &cmds.commands {
+        for (_mclass, cmds) in &resp.module_commands {
+            for (_cmd, desc) in &cmds.commands {
                 descriptors.add_message_proto("", &desc);
             }
         }
-        for (_, desc) in &resp.ports {
+        for (_driver, desc) in &resp.ports {
             descriptors.add_message_proto("", &desc);
         }
 
@@ -54,14 +54,18 @@ impl BessClient {
 
     pub fn get_module_init_descriptor(&self, mclass: &str) -> Option<&MessageDescriptor> {
         match self.remote_descriptors.modules.get(mclass) {
-            Some(desc) => self.descriptors.message_by_name(desc.get_name()),
+            Some(desc) => self
+                .descriptors
+                .message_by_name(&format!(".{}", desc.get_name())),
             None => None,
         }
     }
 
     pub fn get_port_init_descriptor(&self, driver: &str) -> Option<&MessageDescriptor> {
         match self.remote_descriptors.ports.get(driver) {
-            Some(desc) => self.descriptors.message_by_name(desc.get_name()),
+            Some(desc) => self
+                .descriptors
+                .message_by_name(&format!(".{}", desc.get_name())),
             None => None,
         }
     }

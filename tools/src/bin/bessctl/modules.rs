@@ -70,7 +70,7 @@ pub fn create_module(client: &BessClient, args: CreateModule) {
     let mut req = bess_msg::CreateModuleRequest::new();
     req.set_mclass(args.mclass);
     req.set_name(args.name);
-    req.set_arg(pb::make_any(arg_desc.name(), &conf).unwrap());
+    req.set_arg(pb::make_any(arg_desc.name(), "bess.pb", &conf).unwrap());
     let resp = client
         .grpc_handle
         .create_module(grpc::RequestOptions::new(), req)

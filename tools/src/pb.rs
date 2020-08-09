@@ -1,7 +1,7 @@
 use protobuf::well_known_types::Any;
 use serde_protobuf::value::Message;
 
-pub fn make_any(type_url: &str, msg: &Message) -> Result<Any, ()> {
+pub fn make_any(type_url: &str, pkg: &str, msg: &Message) -> Result<Any, ()> {
     let mut ret = Any::new();
     let buf = msg.write_to_bytes();
     if buf.is_err() {
@@ -9,7 +9,8 @@ pub fn make_any(type_url: &str, msg: &Message) -> Result<Any, ()> {
     }
     ret.set_type_url(
         format!(
-            "type.googleapis.com/{}",
+            "type.googleapis.com/{}.{}",
+            pkg,
             type_url.to_string().strip_prefix(".").unwrap_or(&type_url)
         )
         .to_string(),

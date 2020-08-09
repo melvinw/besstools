@@ -6,26 +6,12 @@ use serde_protobuf::descriptor::{Descriptors, FieldLabel, FieldType, MessageDesc
 use serde_protobuf::value::{Field, Message, Value};
 
 fn msg_from_json(
-    descriptor: Option<&MessageDescriptor>,
+    descriptor: &MessageDescriptor,
     descriptors: &Descriptors,
     obj: &serde_json::Map<String, serde_json::Value>,
 ) -> Result<Message, ()> {
-    let opt = obj.get("@type");
-    if opt.is_none() {
-        return Err(());
-    }
-    let m_type: Option<String> = match opt {
-        Some(t) => Some(t.as_str().unwrap().to_string()),
-        _ => None,
-    };
-
-    assert!(m_type.is_some() || descriptor.is_some());
-    let desc = match m_type {
-        Some(ref t) => descriptors.message_by_name(&t).unwrap(),
-        None => descriptor.unwrap(),
-    };
-    let mut ret = Message::new(desc);
-    for field in desc.fields() {
+    let mut ret = Message::new(descriptor);
+    for field in descriptor.fields() {
         if !obj.contains_key(field.name()) {
             continue;
         }
@@ -83,7 +69,7 @@ fn msg_from_json(
                                 .map(|x| {
                                     Value::Message(
                                         msg_from_json(
-                                            Some(child_desc),
+                                            child_desc,
                                             descriptors,
                                             x.as_object().unwrap(),
                                         )
@@ -113,7 +99,7 @@ fn msg_from_json(
                     FieldType::Double => Field::Singular(Some(Value::F64(jv.as_f64().unwrap()))),
                     FieldType::Bool => Field::Singular(Some(Value::Bool(jv.as_bool().unwrap()))),
                     FieldType::Message(child_desc) => Field::Singular(Some(Value::Message(
-                        msg_from_json(Some(child_desc), descriptors, jv.as_object().unwrap())?,
+                        msg_from_json(child_desc, descriptors, jv.as_object().unwrap())?,
                     ))),
                     _ => panic!(),
                 },
@@ -122,23 +108,22 @@ fn msg_from_json(
         }
     }
 
-    if let Some(t) = m_type {
-        if let Some(true_desc) = descriptor {
-            if true_desc.name() == ".google.protobuf.Any" {
-                let mut ret_any = Message::new(true_desc);
-                ret_any.fields.insert(
-                    1,
-                    Field::Singular(Some(Value::String(format!(
-                        "type.googleapis.com/{}",
-                        t.strip_prefix(".").unwrap_or(&t)
-                    )))),
-                );
-                ret_any.fields.insert(
-                    2,
-                    Field::Singular(Some(Value::Bytes(ret.write_to_bytes().unwrap()))),
-                );
-                return Ok(ret_any);
-            }
+    if let Some(t) = obj.get("@type") {
+        let t_str = t.as_str().unwrap();
+        if descriptor.name() == ".google.protobuf.Any" {
+            let mut ret_any = Message::new(descriptor);
+            ret_any.fields.insert(
+                1,
+                Field::Singular(Some(Value::String(format!(
+                    "type.googleapis.com/{}",
+                    t_str.strip_prefix(".").unwrap_or(&t_str)
+                )))),
+            );
+            ret_any.fields.insert(
+                2,
+                Field::Singular(Some(Value::Bytes(ret.write_to_bytes().unwrap()))),
+            );
+            return Ok(ret_any);
         }
     }
 
@@ -152,7 +137,7 @@ pub fn from_str(
 ) -> Result<Message, ()> {
     let m: serde_json::Value = serde_json::from_str(&jstr).unwrap();
     match m.as_object() {
-        Some(obj) => msg_from_json(Some(descriptor), descriptors, obj),
+        Some(obj) => msg_from_json(descriptor, descriptors, obj),
         _ => Err(()),
     }
 }
