@@ -7,7 +7,13 @@ pub fn make_any(type_url: &str, msg: &Message) -> Result<Any, ()> {
     if buf.is_err() {
         return Err(());
     }
-    ret.set_type_url(type_url.to_string());
+    ret.set_type_url(
+        format!(
+            "type.googleapis.com/{}",
+            type_url.to_string().strip_prefix(".").unwrap_or(&type_url)
+        )
+        .to_string(),
+    );
     ret.set_value(buf.unwrap());
     Ok(ret)
 }

@@ -2,11 +2,10 @@ use std::fs;
 use std::io::prelude::*;
 
 use futures::executor;
-use serde_protobuf::descriptor::Descriptors;
 
+use bessagent::bess_client::BessClient;
 use bessagent::{json_pb, pb};
 use libbess::bess_msg;
-use libbess::service_grpc::BESSControlClient;
 
 use clap::Clap;
 
@@ -46,8 +45,9 @@ pub struct DestroyModule {
     pub name: String,
 }
 
-pub fn list_modules(client: &BESSControlClient, args: ListModules) {
+pub fn list_modules(client: &BessClient, args: ListModules) {
     let resp = client
+        .grpc_handle
         .list_modules(grpc::RequestOptions::new(), bess_msg::EmptyRequest::new())
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
@@ -60,27 +60,30 @@ pub fn list_modules(client: &BESSControlClient, args: ListModules) {
     }
 }
 
-pub fn create_module(client: &BESSControlClient, descriptors: &Descriptors, args: CreateModule) {
+pub fn create_module(client: &BessClient, args: CreateModule) {
     let mut f = fs::File::open(args.config).unwrap();
     let mut jstr = String::new();
     f.read_to_string(&mut jstr).unwrap();
-    let (arg_type, conf) = json_pb::from_str(descriptors, &jstr).unwrap();
+    let arg_desc = client.get_module_init_descriptor(&args.mclass).unwrap();
+    let conf = json_pb::from_str(&arg_desc, &client.descriptors, &jstr).unwrap();
 
     let mut req = bess_msg::CreateModuleRequest::new();
     req.set_mclass(args.mclass);
     req.set_name(args.name);
-    req.set_arg(pb::make_any(&arg_type, &conf).unwrap());
+    req.set_arg(pb::make_any(arg_desc.name(), &conf).unwrap());
     let resp = client
+        .grpc_handle
         .create_module(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
     println!("{}", serde_json::to_string(resp).unwrap());
 }
 
-pub fn destroy_module(client: &BESSControlClient, args: DestroyModule) {
+pub fn destroy_module(client: &BessClient, args: DestroyModule) {
     let mut req = bess_msg::DestroyModuleRequest::new();
     req.set_name(args.name);
     let resp = client
+        .grpc_handle
         .destroy_module(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
