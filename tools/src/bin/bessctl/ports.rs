@@ -77,7 +77,14 @@ pub fn create_port(client: &BessClient, args: CreatePort) {
         .create_port(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }
 
 pub fn destroy_port(client: &BessClient, args: DestroyPort) {
@@ -88,5 +95,12 @@ pub fn destroy_port(client: &BessClient, args: DestroyPort) {
         .destroy_port(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }

@@ -128,7 +128,14 @@ pub fn create_module(client: &BessClient, args: CreateModule) {
         .create_module(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }
 
 pub fn destroy_module(client: &BessClient, args: DestroyModule) {
@@ -139,13 +146,20 @@ pub fn destroy_module(client: &BessClient, args: DestroyModule) {
         .destroy_module(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }
 
 pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
     if args.json_args.is_some() && args.args_file.is_some() {
         println!("at most one of -j or -f can be provided");
-        std::process::exit(1); // XXX: EINVAL
+        std::process::exit(1);
     }
 
     let mut jstr = "{}".to_string();
@@ -171,7 +185,7 @@ pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
     }
     if mclass.is_none() {
         println!("module {} doesn't exist", args.name);
-        std::process::exit(1); // XXX: ENOENT
+        std::process::exit(1);
     }
     let arg_desc = client
         .get_module_command_descriptor(mclass.unwrap(), &args.cmd)
@@ -188,11 +202,21 @@ pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
 
-    let (subdesc, inner_resp) = pb::unpack_any(resp.get_data(), &client.descriptors).unwrap();
-    println!(
-        "{}",
-        json_pb::to_str(subdesc, &client.descriptors, &inner_resp).unwrap()
-    );
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
+
+    if resp.has_data() {
+        let (subdesc, inner_resp) = pb::unpack_any(resp.get_data(), &client.descriptors).unwrap();
+        println!(
+            "{}",
+            json_pb::to_str(subdesc, &client.descriptors, &inner_resp).unwrap()
+        );
+    }
 }
 
 pub fn connect_modules(client: &BessClient, args: ConnectModules) {
@@ -206,7 +230,14 @@ pub fn connect_modules(client: &BessClient, args: ConnectModules) {
         .connect_modules(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }
 
 pub fn disconnect_modules(client: &BessClient, args: DisconnectModules) {
@@ -218,5 +249,12 @@ pub fn disconnect_modules(client: &BessClient, args: DisconnectModules) {
         .disconnect_modules(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    if resp.has_error() {
+        let ec = resp.get_error().get_code();
+        if ec != 0 {
+            println!("{}", resp.get_error().get_errmsg());
+            std::process::exit(ec);
+        }
+    }
 }
