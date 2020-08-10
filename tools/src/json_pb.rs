@@ -1,112 +1,102 @@
+use failure::format_err;
+use failure::Error;
 use serde_json::json;
 use serde_json::Value as jValue;
 use serde_protobuf::descriptor::{Descriptors, FieldLabel, FieldType, MessageDescriptor};
 use serde_protobuf::value::{Field, Message, Value};
 
+fn jsonval2pb(v: &jValue, f: FieldType, descriptors: &Descriptors) -> Result<Value, Error> {
+    match f {
+        FieldType::Int32 => match v.as_i64() {
+            Some(x) => Ok(Value::I32(x as i32)),
+            _ => Err(format_err!("cannot convert non-int type to i32")),
+        },
+        FieldType::Int64 => match v.as_i64() {
+            Some(x) => Ok(Value::I64(x)),
+            _ => Err(format_err!("cannot convert non-int type to i64")),
+        },
+        FieldType::UInt32 => match v.as_u64() {
+            Some(x) => Ok(Value::U32(x as u32)),
+            _ => Err(format_err!("cannot convert non-uint type to u32")),
+        },
+        FieldType::UInt64 => match v.as_u64() {
+            Some(x) => Ok(Value::U64(x)),
+            _ => Err(format_err!("cannot convert non-uint type to u64")),
+        },
+        FieldType::Float => match v.as_f64() {
+            Some(x) => Ok(Value::F32(x as f32)),
+            _ => Err(format_err!("cannot convert non-float type to f32")),
+        },
+        FieldType::Double => match v.as_f64() {
+            Some(x) => Ok(Value::F64(x)),
+            _ => Err(format_err!("cannot convert non-double type to f64")),
+        },
+        FieldType::Bool => match v.as_bool() {
+            Some(x) => Ok(Value::Bool(x)),
+            _ => Err(format_err!("cannot convert non-bool type to bool")),
+        },
+        FieldType::String => match v.as_str() {
+            Some(x) => Ok(Value::String(x.to_string())),
+            _ => Err(format_err!("cannot convert non-string type to string")),
+        },
+        FieldType::Message(child_desc) => match v.as_object() {
+            Some(x) => match msg_from_json(child_desc, descriptors, x) {
+                Ok(msg) => Ok(Value::Message(msg)),
+                Err(e) => Err(e),
+            },
+            _ => Err(format_err!("cannot convert non-object type to message")),
+        },
+        _ => Err(format_err!("how did i get here?")),
+    }
+}
+
 fn msg_from_json(
     descriptor: &MessageDescriptor,
     descriptors: &Descriptors,
     obj: &serde_json::Map<String, serde_json::Value>,
-) -> Result<Message, ()> {
+) -> Result<Message, Error> {
     let mut ret = Message::new(descriptor);
     for field in descriptor.fields() {
         if !obj.contains_key(field.name()) {
             continue;
         }
-        if let Some(jv) = obj.get(field.name()) {
-            if jv.is_null() {
-                ret.fields.insert(field.number(), Field::Singular(None));
-                continue;
-            }
-            let v = match field.field_label() {
-                FieldLabel::Repeated => {
-                    let varr = jv.as_array().unwrap();
-                    match field.field_type(&descriptors) {
-                        FieldType::Int32 => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::I32(x.as_i64().unwrap() as i32))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::Int64 => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::I64(x.as_i64().unwrap()))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::UInt32 => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::U32(x.as_u64().unwrap() as u32))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::UInt64 => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::U64(x.as_u64().unwrap()))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::Float => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::F32(x.as_f64().unwrap() as f32))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::Double => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::F64(x.as_f64().unwrap()))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::Bool => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::Bool(x.as_bool().unwrap()))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::String => Field::Repeated(
-                            varr.iter()
-                                .map(|x| Value::String(x.as_str().unwrap().to_string()))
-                                .collect::<Vec<Value>>(),
-                        ),
-                        FieldType::Message(child_desc) => Field::Repeated(
-                            varr.iter()
-                                .map(|x| {
-                                    Value::Message(
-                                        msg_from_json(
-                                            child_desc,
-                                            descriptors,
-                                            x.as_object().unwrap(),
-                                        )
-                                        .unwrap(),
-                                    )
-                                })
-                                .collect::<Vec<Value>>(),
-                        ),
-                        _ => panic!(),
-                    }
-                }
-                _ => match field.field_type(&descriptors) {
-                    FieldType::String => {
-                        Field::Singular(Some(Value::String(jv.as_str().unwrap().to_string())))
-                    }
-                    FieldType::Int32 => {
-                        Field::Singular(Some(Value::I32(jv.as_i64().unwrap() as i32)))
-                    }
-                    FieldType::Int64 => Field::Singular(Some(Value::I64(jv.as_i64().unwrap()))),
-                    FieldType::UInt32 => {
-                        Field::Singular(Some(Value::U32(jv.as_u64().unwrap() as u32)))
-                    }
-                    FieldType::UInt64 => Field::Singular(Some(Value::U64(jv.as_u64().unwrap()))),
-                    FieldType::Float => {
-                        Field::Singular(Some(Value::F32(jv.as_f64().unwrap() as f32)))
-                    }
-                    FieldType::Double => Field::Singular(Some(Value::F64(jv.as_f64().unwrap()))),
-                    FieldType::Bool => Field::Singular(Some(Value::Bool(jv.as_bool().unwrap()))),
-                    FieldType::Message(child_desc) => Field::Singular(Some(Value::Message(
-                        msg_from_json(child_desc, descriptors, jv.as_object().unwrap())?,
-                    ))),
-                    _ => panic!(),
-                },
-            };
-            ret.fields.insert(field.number(), v);
+        if !obj.contains_key(field.name()) {
+            continue;
         }
+        let jv = obj.get(field.name()).unwrap();
+        if jv.is_null() {
+            ret.fields.insert(field.number(), Field::Singular(None));
+            continue;
+        }
+
+        let v = match field.field_label() {
+            FieldLabel::Repeated => match jv.as_array() {
+                Some(varr) => {
+                    let mut r = Vec::<Value>::new();
+                    for x in varr.iter() {
+                        r.push(jsonval2pb(x, field.field_type(descriptors), descriptors)?);
+                    }
+                    Field::Repeated(r)
+                }
+                _ => {
+                    return Err(format_err!(
+                        "cannot convert non-array type to repeated field"
+                    ));
+                }
+            },
+            _ => Field::Singular(Some(jsonval2pb(
+                jv,
+                field.field_type(descriptors),
+                descriptors,
+            )?)),
+        };
+        ret.fields.insert(field.number(), v);
     }
 
     if let Some(t) = obj.get("@type") {
+        if !t.is_string() {
+            return Err(format_err!("type URL must be a string"));
+        }
         let t_str = t.as_str().unwrap();
         if descriptor.name() == ".google.protobuf.Any" {
             let mut ret_any = Message::new(descriptor);
@@ -119,7 +109,7 @@ fn msg_from_json(
             );
             ret_any.fields.insert(
                 2,
-                Field::Singular(Some(Value::Bytes(ret.write_to_bytes().unwrap()))),
+                Field::Singular(Some(Value::Bytes(ret.write_to_bytes()?))),
             );
             return Ok(ret_any);
         }
@@ -132,11 +122,11 @@ pub fn from_str(
     descriptor: &MessageDescriptor,
     descriptors: &Descriptors,
     jstr: &String,
-) -> Result<Message, ()> {
-    let m: serde_json::Value = serde_json::from_str(&jstr).unwrap();
+) -> Result<Message, Error> {
+    let m: serde_json::Value = serde_json::from_str(&jstr)?;
     match m.as_object() {
         Some(obj) => msg_from_json(descriptor, descriptors, obj),
-        _ => Err(()),
+        _ => Err(format_err!("cannot convert non-object type into message")),
     }
 }
 
@@ -144,7 +134,7 @@ fn pbval2json(
     v: &Value,
     descriptor: Option<&MessageDescriptor>,
     descriptors: &Descriptors,
-) -> Result<jValue, ()> {
+) -> Result<jValue, Error> {
     match v {
         Value::I32(x) => Ok(json!(*x)),
         Value::I64(x) => Ok(json!(*x)),
@@ -156,9 +146,9 @@ fn pbval2json(
         Value::String(s) => Ok(jValue::String(s.clone())),
         Value::Message(msg) => match msg_to_json(descriptor.expect("XXX"), descriptors, msg) {
             Ok(map) => Ok(jValue::Object(map)),
-            _ => Err(()),
+            _ => Err(format_err!("how did i get here?")),
         },
-        _ => Err(()),
+        _ => Err(format_err!("how did i get here?")),
     }
 }
 
@@ -166,21 +156,26 @@ fn msg_to_json(
     descriptor: &MessageDescriptor,
     descriptors: &Descriptors,
     msg: &Message,
-) -> Result<serde_json::Map<String, jValue>, ()> {
+) -> Result<serde_json::Map<String, jValue>, Error> {
     let mut ret = serde_json::Map::new();
     for (fnum, field) in &msg.fields {
-        let fdesc = descriptor.field_by_number(*fnum).unwrap();
-        let child_desc: Option<&MessageDescriptor> = match fdesc.field_type(&descriptors) {
+        let fdesc = descriptor.field_by_number(*fnum);
+        if fdesc.is_none() {
+            return Err(format_err!("no field with number {} exists", *fnum));
+        }
+        let child_desc: Option<&MessageDescriptor> = match fdesc.unwrap().field_type(&descriptors) {
             FieldType::Message(md) => Some(md),
             _ => None,
         };
         let v = match field {
-            Field::Repeated(varr) => jValue::Array(
-                varr.iter()
-                    .map(|x| pbval2json(x, child_desc, descriptors).unwrap())
-                    .collect::<Vec<jValue>>(),
-            ),
-            Field::Singular(Some(v)) => pbval2json(v, child_desc, descriptors).unwrap(),
+            Field::Repeated(varr) => {
+                let mut r = Vec::<jValue>::new();
+                for x in varr.iter() {
+                    r.push(pbval2json(x, child_desc, descriptors)?);
+                }
+                jValue::Array(r)
+            }
+            Field::Singular(Some(v)) => pbval2json(v, child_desc, descriptors)?,
             Field::Singular(None) => jValue::Null,
         };
         ret.insert(
@@ -199,9 +194,9 @@ pub fn to_str(
     descriptor: &MessageDescriptor,
     descriptors: &Descriptors,
     msg: &Message,
-) -> Result<String, ()> {
+) -> Result<String, Error> {
     match msg_to_json(descriptor, descriptors, msg) {
-        Ok(obj) => Ok(serde_json::to_string(&obj).unwrap()),
-        _ => Err(()),
+        Ok(obj) => Ok(serde_json::to_string(&obj)?),
+        Err(e) => Err(e),
     }
 }

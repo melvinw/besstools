@@ -1,8 +1,5 @@
-extern crate futures;
-extern crate libbess;
-extern crate serde;
-extern crate serde_protobuf;
-
+use failure::format_err;
+use failure::Error;
 use futures::executor;
 use grpc::ClientStubExt;
 
@@ -18,21 +15,24 @@ pub struct BessClient {
 }
 
 impl BessClient {
-    pub fn new(addr: &str) -> Result<Self, ()> {
+    pub fn new(addr: &str) -> Result<Self, Error> {
         let parts: Vec<&str> = addr.split(":").collect();
-        assert!(parts.len() == 2);
+        if parts.len() != 2 {
+            return Err(format_err!("address must be <dns_name>:<port>"));
+        }
         let grpc_handle =
-            BESSControlClient::new_plain(parts[0], parts[1].parse().unwrap(), Default::default())
-                .unwrap();
+            BESSControlClient::new_plain(parts[0], parts[1].parse()?, Default::default()).unwrap();
         let mut descriptors = Descriptors::new();
 
-        let f_resp = grpc_handle
-            .dump_descriptors(
-                grpc::RequestOptions::new(),
-                libbess::bess_msg::EmptyRequest::new(),
-            )
-            .drop_metadata();
-        let resp = executor::block_on(f_resp).unwrap();
+        let resp = executor::block_on(
+            grpc_handle
+                .dump_descriptors(
+                    grpc::RequestOptions::new(),
+                    libbess::bess_msg::EmptyRequest::new(),
+                )
+                .drop_metadata(),
+        )?;
+
         for (_mclass, desc) in &resp.modules {
             descriptors.add_message_proto("", &desc);
         }

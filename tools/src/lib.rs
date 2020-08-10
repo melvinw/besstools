@@ -1,3 +1,6 @@
+extern crate failure;
+extern crate futures;
+extern crate libbess;
 extern crate serde;
 extern crate serde_json;
 extern crate serde_protobuf;
