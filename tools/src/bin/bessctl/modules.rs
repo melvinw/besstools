@@ -155,5 +155,10 @@ pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
         .module_command(grpc::RequestOptions::new(), req)
         .drop_metadata();
     let resp = &executor::block_on(resp).unwrap();
-    println!("{}", serde_json::to_string(resp).unwrap());
+
+    let (subdesc, inner_resp) = pb::unpack_any(resp.get_data(), &client.descriptors).unwrap();
+    println!(
+        "{}",
+        json_pb::to_str(subdesc, &client.descriptors, &inner_resp).unwrap()
+    );
 }
