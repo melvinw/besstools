@@ -1,5 +1,6 @@
 extern crate bessagent;
 extern crate clap;
+extern crate failure;
 extern crate futures;
 extern crate glob;
 extern crate libbess;
@@ -37,6 +38,8 @@ enum SubCommand {
     CreateModule(modules::CreateModule),
     DestroyModule(modules::DestroyModule),
     RunModuleCommand(modules::RunModuleCommand),
+    ConnectModules(modules::ConnectModules),
+    DisconnectModules(modules::DisconnectModules),
 }
 
 fn main() {
@@ -62,5 +65,7 @@ fn main() {
         SubCommand::CreateModule(args) => modules::create_module(&client, args),
         SubCommand::DestroyModule(args) => modules::destroy_module(&client, args),
         SubCommand::RunModuleCommand(args) => modules::run_module_command(&client, args),
+        SubCommand::ConnectModules(args) => modules::connect_modules(&client, args),
+        SubCommand::DisconnectModules(args) => modules::disconnect_modules(&client, args),
     }
 }

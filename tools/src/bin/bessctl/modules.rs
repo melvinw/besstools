@@ -65,6 +65,38 @@ pub struct RunModuleCommand {
     pub args_file: Option<String>,
 }
 
+/// Connect two modules
+#[derive(Clap)]
+pub struct ConnectModules {
+    /// Name of the source module
+    #[clap(name = "SRC")]
+    pub src: String,
+
+    /// Name of the destination module
+    #[clap(name = "DSST")]
+    pub dest: String,
+
+    /// The output gate to be used on the source module
+    #[clap(long = "ogate", default_value = "0")]
+    pub ogate: u16,
+
+    /// The input gate to be used on the destination module
+    #[clap(long = "igate", default_value = "0")]
+    pub igate: u16,
+}
+
+/// Disconnect two modules
+#[derive(Clap)]
+pub struct DisconnectModules {
+    /// Name of the source module
+    #[clap(name = "SRC")]
+    pub src: String,
+
+    /// The output gate to be used on the source module
+    #[clap(name = "OGATE")]
+    pub ogate: u16,
+}
+
 pub fn list_modules(client: &BessClient, args: ListModules) {
     let resp = client
         .grpc_handle
@@ -161,4 +193,30 @@ pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
         "{}",
         json_pb::to_str(subdesc, &client.descriptors, &inner_resp).unwrap()
     );
+}
+
+pub fn connect_modules(client: &BessClient, args: ConnectModules) {
+    let mut req = bess_msg::ConnectModulesRequest::new();
+    req.set_m1(args.src);
+    req.set_m2(args.dest);
+    req.set_ogate(args.ogate.into());
+    req.set_igate(args.igate.into());
+    let resp = client
+        .grpc_handle
+        .connect_modules(grpc::RequestOptions::new(), req)
+        .drop_metadata();
+    let resp = &executor::block_on(resp).unwrap();
+    println!("{}", serde_json::to_string(resp).unwrap());
+}
+
+pub fn disconnect_modules(client: &BessClient, args: DisconnectModules) {
+    let mut req = bess_msg::DisconnectModulesRequest::new();
+    req.set_name(args.src);
+    req.set_ogate(args.ogate.into());
+    let resp = client
+        .grpc_handle
+        .disconnect_modules(grpc::RequestOptions::new(), req)
+        .drop_metadata();
+    let resp = &executor::block_on(resp).unwrap();
+    println!("{}", serde_json::to_string(resp).unwrap());
 }
