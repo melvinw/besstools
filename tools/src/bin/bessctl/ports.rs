@@ -3,8 +3,8 @@ use std::io::prelude::*;
 
 use futures::executor;
 
-use bessagent::bess_client::BessClient;
-use bessagent::{json_pb, pb};
+use besstools::bess_client::BessClient;
+use besstools::{json_pb, pb};
 use libbess::bess_msg;
 
 use clap::Clap;

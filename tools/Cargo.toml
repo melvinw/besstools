@@ -1,5 +1,5 @@
 [package]
-name = "bessagent"
+name = "besstools"
 version = "0.0.0"
 authors = ["Melvin Walls <mwalls67@gmail.com>"]
 edition = "2018"

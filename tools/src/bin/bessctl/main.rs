@@ -1,4 +1,4 @@
-extern crate bessagent;
+extern crate besstools;
 extern crate clap;
 extern crate failure;
 extern crate futures;
@@ -45,7 +45,7 @@ enum SubCommand {
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let mut client = bessagent::bess_client::BessClient::new(&opts.bess_addr).unwrap();
+    let mut client = besstools::bess_client::BessClient::new(&opts.bess_addr).unwrap();
     if let Ok(protos) = glob::glob(&format!("{}/*.pb", opts.extra_proto_dir.display())) {
         for pb in protos {
             if let Ok(path) = pb {
