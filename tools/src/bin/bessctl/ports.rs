@@ -32,9 +32,13 @@ pub struct CreatePort {
     #[clap(name = "NAME")]
     pub name: String,
 
-    /// Path to driver-specific configuration. Must be in canonical protobuf JSON format
-    #[clap(name = "CONFIG", parse(from_os_str))]
-    pub config: std::path::PathBuf,
+    /// JSON formated representation of the module's configuration
+    #[clap(short = "j", long = "json", name = "CONFGI")]
+    pub json_args: Option<String>,
+
+    /// Path to a file containing the JSON formated representation of the module's configuration
+    #[clap(short = "f", long = "file", name = "CONFIG_FILE")]
+    pub args_file: Option<String>,
 }
 
 /// Destroy an existing port
@@ -61,9 +65,19 @@ pub fn list_ports(client: &BessClient, args: ListPorts) {
 }
 
 pub fn create_port(client: &BessClient, args: CreatePort) {
-    let mut f = fs::File::open(args.config).unwrap();
-    let mut jstr = String::new();
-    f.read_to_string(&mut jstr).unwrap();
+    if args.json_args.is_some() && args.args_file.is_some() {
+        println!("at most one of -j or -f can be provided");
+        std::process::exit(1);
+    }
+
+    let mut jstr = "{}".to_string();
+    if let Some(json_args) = args.json_args {
+        jstr = json_args;
+    }
+    if let Some(file_args) = args.args_file {
+        let mut f = fs::File::open(file_args).unwrap();
+        f.read_to_string(&mut jstr).unwrap();
+    }
     let arg_desc = client.get_port_init_descriptor(&args.driver).unwrap();
     let conf = json_pb::from_str(&arg_desc, &client.descriptors, &jstr).unwrap();
 
