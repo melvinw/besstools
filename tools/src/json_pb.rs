@@ -1,7 +1,5 @@
-extern crate serde;
-extern crate serde_json;
-extern crate serde_protobuf;
-
+use serde_json::json;
+use serde_json::Value as jValue;
 use serde_protobuf::descriptor::{Descriptors, FieldLabel, FieldType, MessageDescriptor};
 use serde_protobuf::value::{Field, Message, Value};
 
@@ -138,6 +136,72 @@ pub fn from_str(
     let m: serde_json::Value = serde_json::from_str(&jstr).unwrap();
     match m.as_object() {
         Some(obj) => msg_from_json(descriptor, descriptors, obj),
+        _ => Err(()),
+    }
+}
+
+fn pbval2json(
+    v: &Value,
+    descriptor: Option<&MessageDescriptor>,
+    descriptors: &Descriptors,
+) -> Result<jValue, ()> {
+    match v {
+        Value::I32(x) => Ok(json!(*x)),
+        Value::I64(x) => Ok(json!(*x)),
+        Value::U32(x) => Ok(json!(*x)),
+        Value::U64(x) => Ok(json!(*x)),
+        Value::F32(x) => Ok(json!(*x)),
+        Value::F64(x) => Ok(json!(*x)),
+        Value::Bool(b) => Ok(jValue::Bool(*b)),
+        Value::String(s) => Ok(jValue::String(s.clone())),
+        Value::Message(msg) => match msg_to_json(descriptor.expect("XXX"), descriptors, msg) {
+            Ok(map) => Ok(jValue::Object(map)),
+            _ => Err(()),
+        },
+        _ => Err(()),
+    }
+}
+
+fn msg_to_json(
+    descriptor: &MessageDescriptor,
+    descriptors: &Descriptors,
+    msg: &Message,
+) -> Result<serde_json::Map<String, jValue>, ()> {
+    let mut ret = serde_json::Map::new();
+    for (fnum, field) in &msg.fields {
+        let fdesc = descriptor.field_by_number(*fnum).unwrap();
+        let child_desc: Option<&MessageDescriptor> = match fdesc.field_type(&descriptors) {
+            FieldType::Message(md) => Some(md),
+            _ => None,
+        };
+        let v = match field {
+            Field::Repeated(varr) => jValue::Array(
+                varr.iter()
+                    .map(|x| pbval2json(x, child_desc, descriptors).unwrap())
+                    .collect::<Vec<jValue>>(),
+            ),
+            Field::Singular(Some(v)) => pbval2json(v, child_desc, descriptors).unwrap(),
+            Field::Singular(None) => jValue::Null,
+        };
+        ret.insert(
+            descriptor
+                .field_by_number(*fnum)
+                .unwrap()
+                .name()
+                .to_string(),
+            v,
+        );
+    }
+    Ok(ret)
+}
+
+pub fn to_str(
+    descriptor: &MessageDescriptor,
+    descriptors: &Descriptors,
+    msg: &Message,
+) -> Result<String, ()> {
+    match msg_to_json(descriptor, descriptors, msg) {
+        Ok(obj) => Ok(serde_json::to_string(&obj).unwrap()),
         _ => Err(()),
     }
 }
