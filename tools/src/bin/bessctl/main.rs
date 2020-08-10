@@ -22,8 +22,8 @@ struct Opts {
     bess_addr: String,
 
     /// Path to a directory containing extra compiled protobuf definitions (produced with `protoc -o foo.pb foo.proto`)
-    #[clap(short = "p", long = "extra-protos", default_value = "./extra_protos")]
-    extra_proto_dir: std::path::PathBuf,
+    #[clap(short = "p", long = "extra-protos")]
+    extra_proto_dir: Option<std::path::PathBuf>,
 
     #[clap(subcommand)]
     subcmd: SubCommand,
@@ -46,12 +46,14 @@ fn main() {
     let opts: Opts = Opts::parse();
 
     let mut client = besstools::bess_client::BessClient::new(&opts.bess_addr).unwrap();
-    if let Ok(protos) = glob::glob(&format!("{}/*.pb", opts.extra_proto_dir.display())) {
-        for pb in protos {
-            if let Ok(path) = pb {
-                let mut f = fs::File::open(path).unwrap();
-                let proto = protobuf::parse_from_reader(&mut f).unwrap();
-                client.descriptors.add_file_set_proto(&proto);
+    if let Some(extra_protos) = opts.extra_proto_dir {
+        if let Ok(protos) = glob::glob(&format!("{}/*.pb", extra_protos.display())) {
+            for pb in protos {
+                if let Ok(path) = pb {
+                    let mut f = fs::File::open(path).unwrap();
+                    let proto = protobuf::parse_from_reader(&mut f).unwrap();
+                    client.descriptors.add_file_set_proto(&proto);
+                }
             }
         }
     }
