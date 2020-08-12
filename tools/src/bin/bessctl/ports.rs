@@ -84,7 +84,7 @@ pub fn create_port(client: &BessClient, args: CreatePort) {
     let mut req = bess_msg::CreatePortRequest::new();
     req.set_driver(args.driver);
     req.set_name(args.name);
-    req.set_arg(pb::make_any(arg_desc.name(), "bess.pb", &conf).unwrap());
+    req.set_arg(pb::make_any(arg_desc.name(), &conf).unwrap());
 
     let resp = client
         .grpc_handle

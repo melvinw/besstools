@@ -136,7 +136,7 @@ pub fn create_module(client: &BessClient, args: CreateModule) {
     let mut req = bess_msg::CreateModuleRequest::new();
     req.set_mclass(args.mclass);
     req.set_name(args.name);
-    req.set_arg(pb::make_any(arg_desc.name(), "bess.pb", &conf).unwrap());
+    req.set_arg(pb::make_any(arg_desc.name(), &conf).unwrap());
     let resp = client
         .grpc_handle
         .create_module(grpc::RequestOptions::new(), req)
@@ -209,7 +209,7 @@ pub fn run_module_command(client: &BessClient, args: RunModuleCommand) {
     let mut req = bess_msg::CommandRequest::new();
     req.set_name(args.name);
     req.set_cmd(args.cmd);
-    req.set_arg(pb::make_any(arg_desc.name(), "bess.pb", &conf).unwrap());
+    req.set_arg(pb::make_any(arg_desc.name(), &conf).unwrap());
     let resp = client
         .grpc_handle
         .module_command(grpc::RequestOptions::new(), req)
