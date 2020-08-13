@@ -31,10 +31,10 @@ pub struct CreateWorker {
 
 /// Destroy an existing worker
 #[derive(Clap)]
-pub struct DestroyWorker {
-    /// ID of the worker to destroy
+pub struct DestroyWorkers {
+    /// ID of the worker(s) to destroy
     #[clap(name = "WID")]
-    pub wid: i64,
+    pub wids: Vec<i64>,
 }
 
 /// Pause workers
@@ -98,20 +98,22 @@ pub fn create_worker(client: &BessClient, args: CreateWorker) {
     }
 }
 
-pub fn destroy_worker(client: &BessClient, args: DestroyWorker) {
-    let mut req = bess_msg::DestroyWorkerRequest::new();
-    req.set_wid(args.wid);
-    let resp = client
-        .grpc_handle
-        .destroy_worker(grpc::RequestOptions::new(), req)
-        .drop_metadata();
-    let resp = &executor::block_on(resp).unwrap();
+pub fn destroy_workers(client: &BessClient, args: DestroyWorkers) {
+    for wid in args.wids.iter() {
+        let mut req = bess_msg::DestroyWorkerRequest::new();
+        req.set_wid(*wid);
+        let resp = client
+            .grpc_handle
+            .destroy_worker(grpc::RequestOptions::new(), req)
+            .drop_metadata();
+        let resp = &executor::block_on(resp).unwrap();
 
-    if resp.has_error() {
-        let ec = resp.get_error().get_code();
-        if ec != 0 {
-            println!("{}", resp.get_error().get_errmsg());
-            std::process::exit(ec);
+        if resp.has_error() {
+            let ec = resp.get_error().get_code();
+            if ec != 0 {
+                println!("{}", resp.get_error().get_errmsg());
+                std::process::exit(ec);
+            }
         }
     }
 }

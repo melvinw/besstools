@@ -43,10 +43,10 @@ pub struct CreatePort {
 
 /// Destroy an existing port
 #[derive(Clap)]
-pub struct DestroyPort {
-    /// Name of the port to destroy
+pub struct DestroyPorts {
+    /// Name of the port(s) to destroy
     #[clap(name = "NAME")]
-    pub name: String,
+    pub names: Vec<String>,
 }
 
 pub fn list_ports(client: &BessClient, args: ListPorts) {
@@ -101,20 +101,22 @@ pub fn create_port(client: &BessClient, args: CreatePort) {
     }
 }
 
-pub fn destroy_port(client: &BessClient, args: DestroyPort) {
-    let mut req = bess_msg::DestroyPortRequest::new();
-    req.set_name(args.name);
-    let resp = client
-        .grpc_handle
-        .destroy_port(grpc::RequestOptions::new(), req)
-        .drop_metadata();
-    let resp = &executor::block_on(resp).unwrap();
+pub fn destroy_ports(client: &BessClient, args: DestroyPorts) {
+    for name in args.names.iter() {
+        let mut req = bess_msg::DestroyPortRequest::new();
+        req.set_name(name.to_string());
+        let resp = client
+            .grpc_handle
+            .destroy_port(grpc::RequestOptions::new(), req)
+            .drop_metadata();
+        let resp = &executor::block_on(resp).unwrap();
 
-    if resp.has_error() {
-        let ec = resp.get_error().get_code();
-        if ec != 0 {
-            println!("{}", resp.get_error().get_errmsg());
-            std::process::exit(ec);
+        if resp.has_error() {
+            let ec = resp.get_error().get_code();
+            if ec != 0 {
+                println!("{}", resp.get_error().get_errmsg());
+                std::process::exit(ec);
+            }
         }
     }
 }

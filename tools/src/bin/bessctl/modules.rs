@@ -43,10 +43,10 @@ pub struct CreateModule {
 
 /// Destroy an existing module
 #[derive(Clap)]
-pub struct DestroyModule {
-    /// Name of the module to destroy
+pub struct DestroyModules {
+    /// Name of the module(s) to destroy
     #[clap(name = "NAME")]
-    pub name: String,
+    pub names: Vec<String>,
 }
 
 /// Run a command on an existing module
@@ -152,20 +152,22 @@ pub fn create_module(client: &BessClient, args: CreateModule) {
     }
 }
 
-pub fn destroy_module(client: &BessClient, args: DestroyModule) {
-    let mut req = bess_msg::DestroyModuleRequest::new();
-    req.set_name(args.name);
-    let resp = client
-        .grpc_handle
-        .destroy_module(grpc::RequestOptions::new(), req)
-        .drop_metadata();
-    let resp = &executor::block_on(resp).unwrap();
+pub fn destroy_modules(client: &BessClient, args: DestroyModules) {
+    for name in args.names.iter() {
+        let mut req = bess_msg::DestroyModuleRequest::new();
+        req.set_name(name.to_string());
+        let resp = client
+            .grpc_handle
+            .destroy_module(grpc::RequestOptions::new(), req)
+            .drop_metadata();
+        let resp = &executor::block_on(resp).unwrap();
 
-    if resp.has_error() {
-        let ec = resp.get_error().get_code();
-        if ec != 0 {
-            println!("{}", resp.get_error().get_errmsg());
-            std::process::exit(ec);
+        if resp.has_error() {
+            let ec = resp.get_error().get_code();
+            if ec != 0 {
+                println!("{}", resp.get_error().get_errmsg());
+                std::process::exit(ec);
+            }
         }
     }
 }
