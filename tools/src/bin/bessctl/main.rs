@@ -9,6 +9,7 @@ extern crate serde_json;
 
 mod modules;
 mod ports;
+mod workers;
 
 use std::fs;
 
@@ -40,6 +41,11 @@ enum SubCommand {
     RunModuleCommand(modules::RunModuleCommand),
     ConnectModules(modules::ConnectModules),
     DisconnectModules(modules::DisconnectModules),
+    ListWorkers(workers::ListWorkers),
+    CreateWorker(workers::CreateWorker),
+    DestroyWorker(workers::DestroyWorker),
+    PauseWorkers(workers::PauseWorkers),
+    ResumeWorkers(workers::ResumeWorkers),
 }
 
 fn main() {
@@ -69,5 +75,10 @@ fn main() {
         SubCommand::RunModuleCommand(args) => modules::run_module_command(&client, args),
         SubCommand::ConnectModules(args) => modules::connect_modules(&client, args),
         SubCommand::DisconnectModules(args) => modules::disconnect_modules(&client, args),
+        SubCommand::ListWorkers(args) => workers::list_workers(&client, args),
+        SubCommand::CreateWorker(args) => workers::create_worker(&client, args),
+        SubCommand::DestroyWorker(args) => workers::destroy_worker(&client, args),
+        SubCommand::PauseWorkers(args) => workers::pause_workers(&client, args),
+        SubCommand::ResumeWorkers(args) => workers::resume_workers(&client, args),
     }
 }
