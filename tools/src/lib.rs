@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate failure;
 extern crate futures;
 extern crate libbess;

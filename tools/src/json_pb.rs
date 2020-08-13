@@ -46,7 +46,25 @@ fn jsonval2pb(v: &jValue, f: FieldType, descriptors: &Descriptors) -> Result<Val
             },
             _ => Err(format_err!("cannot convert non-object type to message")),
         },
-        _ => Err(format_err!("how did i get here?")),
+        FieldType::Enum(enum_desc) => match v.as_i64() {
+            Some(x) => Ok(Value::I32(x as i32)),
+            _ => match v.as_str() {
+                Some(s) => match enum_desc.value_by_name(s) {
+                    Some(val_desc) => Ok(Value::I32(val_desc.number())),
+                    _ => Err(format_err!("got unrecognized enum value {}", s)),
+                },
+                _ => Err(format_err!("cannot convert non-int/non-str to enum")),
+            },
+        },
+        FieldType::Bytes => match v.as_str() {
+            Some(s) => match base64::decode(s) {
+                Ok(vraw) => Ok(Value::Bytes(vraw)),
+                Err(e) => Err(format_err!("base64 decode failed {}", e)),
+            },
+            _ => Err(format_err!("cannot convert non-string to bytes")),
+        },
+        // TODO(melvin): Handle the remaining FieldType variants
+        _ => unimplemented!(),
     }
 }
 
@@ -144,11 +162,16 @@ fn pbval2json(
         Value::F64(x) => Ok(json!(*x)),
         Value::Bool(b) => Ok(jValue::Bool(*b)),
         Value::String(s) => Ok(jValue::String(s.clone())),
-        Value::Message(msg) => match msg_to_json(descriptor.expect("XXX"), descriptors, msg) {
+        Value::Message(msg) => match msg_to_json(
+            descriptor.expect("can't convert message type without descriptor"),
+            descriptors,
+            msg,
+        ) {
             Ok(map) => Ok(jValue::Object(map)),
-            _ => Err(format_err!("how did i get here?")),
+            _ => Err(format_err!("failed to convert message")),
         },
-        _ => Err(format_err!("how did i get here?")),
+        Value::Enum(x) => Ok(json!(*x)),
+        Value::Bytes(bv) => Ok(json!(base64::encode(bv))),
     }
 }
 
